@@ -1,61 +1,220 @@
 import { Button } from '@/components/livekit/button';
-
-function WelcomeImage() {
-  return (
-    <svg
-      width="64"
-      height="64"
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="text-fg0 mb-4 size-16"
-    >
-      <path
-        d="M15 24V40C15 40.7957 14.6839 41.5587 14.1213 42.1213C13.5587 42.6839 12.7956 43 12 43C11.2044 43 10.4413 42.6839 9.87868 42.1213C9.31607 41.5587 9 40.7957 9 40V24C9 23.2044 9.31607 22.4413 9.87868 21.8787C10.4413 21.3161 11.2044 21 12 21C12.7956 21 13.5587 21.3161 14.1213 21.8787C14.6839 22.4413 15 23.2044 15 24ZM22 5C21.2044 5 20.4413 5.31607 19.8787 5.87868C19.3161 6.44129 19 7.20435 19 8V56C19 56.7957 19.3161 57.5587 19.8787 58.1213C20.4413 58.6839 21.2044 59 22 59C22.7956 59 23.5587 58.6839 24.1213 58.1213C24.6839 57.5587 25 56.7957 25 56V8C25 7.20435 24.6839 6.44129 24.1213 5.87868C23.5587 5.31607 22.7956 5 22 5ZM32 13C31.2044 13 30.4413 13.3161 29.8787 13.8787C29.3161 14.4413 29 15.2044 29 16V48C29 48.7957 29.3161 49.5587 29.8787 50.1213C30.4413 50.6839 31.2044 51 32 51C32.7956 51 33.5587 50.6839 34.1213 50.1213C34.6839 49.5587 35 48.7957 35 48V16C35 15.2044 34.6839 14.4413 34.1213 13.8787C33.5587 13.3161 32.7956 13 32 13ZM42 21C41.2043 21 40.4413 21.3161 39.8787 21.8787C39.3161 22.4413 39 23.2044 39 24V40C39 40.7957 39.3161 41.5587 39.8787 42.1213C40.4413 42.6839 41.2043 43 42 43C42.7957 43 43.5587 42.6839 44.1213 42.1213C44.6839 41.5587 45 40.7957 45 40V24C45 23.2044 44.6839 22.4413 44.1213 21.8787C43.5587 21.3161 42.7957 21 42 21ZM52 17C51.2043 17 50.4413 17.3161 49.8787 17.8787C49.3161 18.4413 49 19.2044 49 20V44C49 44.7957 49.3161 45.5587 49.8787 46.1213C50.4413 46.6839 51.2043 47 52 47C52.7957 47 53.5587 46.6839 54.1213 46.1213C54.6839 45.5587 55 44.7957 55 44V20C55 19.2044 54.6839 18.4413 54.1213 17.8787C53.5587 17.3161 52.7957 17 52 17Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
-}
+import { useState } from 'react';
 
 interface WelcomeViewProps {
   startButtonText: string;
   onStartCall: () => void;
 }
 
-export const WelcomeView = ({
-  startButtonText,
-  onStartCall,
-  ref,
-}: React.ComponentProps<'div'> & WelcomeViewProps) => {
+function Modal({ open, onClose, title, children }: any) {
+  if (!open) return null;
   return (
-    <div ref={ref}>
-      <section className="bg-background flex flex-col items-center justify-center text-center">
-        <WelcomeImage />
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-[min(680px,95%)] rounded-2xl bg-white/95 p-6 shadow-2xl ring-1 ring-black/5 dark:bg-black/80">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">{title}</h3>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+        <div>{children}</div>
+      </div>
+    </div>
+  );
+}
 
-        <p className="text-foreground max-w-prose pt-1 leading-6 font-medium">
-          Chat live with your voice AI agent
-        </p>
+const MENU_ITEMS = [
+  { id: 'latte', name: 'Velvet Latte', desc: 'Creamy espresso with steamed milk', price: '3.50' },
+  { id: 'capp', name: 'Cappuccino Bliss', desc: 'Foamy, rich, and perfect', price: '3.00' },
+  { id: 'cold', name: 'Iced Cold Brew', desc: 'Bold, chilled, smooth', price: '3.75' },
+  { id: 'matcha', name: 'Matcha Magic', desc: 'Ceremonial-grade matcha delight', price: '4.00' },
+];
 
-        <Button variant="primary" size="lg" onClick={onStartCall} className="mt-6 w-64 font-mono">
-          {startButtonText}
-        </Button>
+export const WelcomeView = ({ startButtonText, onStartCall, ref }: React.ComponentProps<'div'> & WelcomeViewProps) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [orderOpen, setOrderOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [cart, setCart] = useState<any[]>([]);
+
+  function addToCart(item: any) {
+    setCart((c) => [...c, item]);
+  }
+
+  function clearCart() {
+    setCart([]);
+  }
+
+  function placeOrder() {
+    // simple local confirmation - persist to localStorage
+    const id = `order_${Date.now()}`;
+    const payload = { id, items: cart, total: cart.reduce((s, i) => s + Number(i.price), 0).toFixed(2) };
+    try {
+      localStorage.setItem(id, JSON.stringify(payload));
+    } catch (e) {
+      // ignore
+    }
+    clearCart();
+    setOrderOpen(false);
+    alert(`Thanks! Order placed (${payload.total}$). Confirmation: ${id}`);
+  }
+
+  return (
+    <div ref={ref} className="min-h-[60vh] flex items-center justify-center px-6">
+      <section className="relative w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl">
+        {/* Background image + gradient */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "linear-gradient(135deg, rgba(255,189,89,0.12), rgba(255,105,135,0.12)), url('https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1400&q=80')",
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 p-8 md:p-12 bg-gradient-to-b from-white/70 to-white/40 dark:from-black/40 dark:to-black/20">
+          <div className="flex-1">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+              Brew & Bean Cafe
+            </h1>
+            <p className="mt-3 text-lg text-muted-foreground max-w-prose">
+              Handcrafted coffee, delightful conversations. Chat live with your barista AI and place your order with voice.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button variant="primary" size="lg" onClick={onStartCall} className="font-mono">
+                {startButtonText}
+              </Button>
+              <Button variant="outline" size="lg" onClick={() => setMenuOpen(true)}>
+                View Menu
+              </Button>
+              <Button variant="secondary" size="lg" onClick={() => setOrderOpen(true)}>
+                Order Now
+              </Button>
+              <Button variant="ghost" size="lg" onClick={() => setAboutOpen(true)}>
+                About
+              </Button>
+            </div>
+
+            <div className="mt-6 flex items-center gap-4">
+              <div className="rounded-full bg-gradient-to-r from-amber-400 to-pink-400 p-1">
+                <img
+                  src="https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=200&q=60"
+                  alt="coffee"
+                  className="w-16 h-16 rounded-full object-cover block"
+                />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Open • 7:00 AM — 6:00 PM</p>
+                <p className="text-sm text-muted-foreground">Free wifi • Cozy seating • Vegan options</p>
+              </div>
+            </div>
+          </div>
+
+          <aside className="w-full md:w-96 bg-white/70 dark:bg-black/60 rounded-2xl p-4 ring-1 ring-black/5">
+            <h4 className="font-bold text-lg">Today's Specials</h4>
+            <ul className="mt-3 space-y-3">
+              {MENU_ITEMS.slice(0, 3).map((m) => (
+                <li key={m.id} className="flex items-start gap-3">
+                  <img
+                    src={`https://images.unsplash.com/photo-1498804103079-a6351b050096?auto=format&fit=crop&w=160&q=60`}
+                    alt={m.name}
+                    className="w-14 h-14 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-semibold">{m.name}</h5>
+                      <span className="text-sm text-muted-foreground">${m.price}</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{m.desc}</p>
+                    <div className="mt-2">
+                      <Button size="sm" variant="primary" onClick={() => addToCart(m)}>
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-4 border-t pt-4">
+              <p className="text-sm text-muted-foreground">Cart: {cart.length} items</p>
+              <div className="mt-3 flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setOrderOpen(true)}>
+                  Checkout
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => clearCart()}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <footer className="relative z-10 p-4 text-center text-xs text-muted-foreground">
+          <div className="max-w-2xl mx-auto">
+            <p>
+              Need help? Visit the <a className="underline" href="/">help center</a> or start a live session.
+            </p>
+          </div>
+        </footer>
       </section>
 
-      <div className="fixed bottom-5 left-0 flex w-full items-center justify-center">
-        <p className="text-muted-foreground max-w-prose pt-1 text-xs leading-5 font-normal text-pretty md:text-sm">
-          Need help getting set up? Check out the{' '}
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://docs.livekit.io/agents/start/voice-ai/"
-            className="underline"
-          >
-            Voice AI quickstart
-          </a>
-          .
-        </p>
-      </div>
+      {/* Modals */}
+      <Modal open={menuOpen} onClose={() => setMenuOpen(false)} title="Our Menu">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {MENU_ITEMS.map((m) => (
+            <div key={m.id} className="p-3 rounded-lg bg-gradient-to-r from-white to-white/60 ring-1 ring-black/5">
+              <h4 className="font-semibold">{m.name} <span className="text-sm text-muted-foreground">${m.price}</span></h4>
+              <p className="text-sm text-muted-foreground">{m.desc}</p>
+              <div className="mt-3">
+                <Button size="sm" variant="primary" onClick={() => addToCart(m)}>
+                  Add to Cart
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal open={orderOpen} onClose={() => setOrderOpen(false)} title="Your Order">
+        <div>
+          {cart.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Your cart is empty. Add items from the menu.</p>
+          ) : (
+            <div className="space-y-3">
+              {cart.map((c, i) => (
+                <div key={`${c.id}-${i}`} className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-sm text-muted-foreground">{c.desc}</div>
+                  </div>
+                  <div className="text-sm">${c.price}</div>
+                </div>
+              ))}
+
+              <div className="pt-3 border-t">
+                <div className="flex items-center justify-between font-semibold">
+                  <div>Total</div>
+                  <div>${cart.reduce((s, i) => s + Number(i.price), 0).toFixed(2)}</div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <Button variant="primary" onClick={placeOrder}>Place Order</Button>
+                  <Button variant="outline" onClick={() => clearCart()}>Clear</Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      <Modal open={aboutOpen} onClose={() => setAboutOpen(false)} title="About Brew & Bean">
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Brew & Bean is a cozy, AI-powered coffee experience. Use voice to chat with our barista and place your order hands-free.
+          </p>
+          <p className="text-sm text-muted-foreground">Follow us on social media for seasonal specials and playlists.</p>
+        </div>
+      </Modal>
     </div>
   );
 };
