@@ -1,0 +1,33 @@
+[
+    {
+        "timestamp": "2025-11-24T20:04:36.831348",
+        "mood": "unwell/sick",
+        "energy": "low",
+        "objectives": [
+            "sleep",
+            "rest"
+        ],
+        "summary": "My advice is to keep prioritizing rest and comfort while you're not feeling well."
+    },
+    {
+        "timestamp": "2025-11-24T20:08:28.898705",
+        "mood": "good",
+        "energy": "good",
+        "objectives": [
+            "increase productivity",
+            "complete daily tasks",
+            "take a 15-minute break"
+        ],
+        "summary": "My advice for you to increase productivity and complete your daily tasks is to break down larger tasks into smaller steps and use your 15-minute break to re-energize."
+    },
+    {
+        "timestamp": "2025-11-24T20:12:47.479447",
+        "mood": "low",
+        "energy": "low",
+        "objectives": [
+            "take a short, easy walk outside for 5-10 minutes",
+            "do one small task"
+        ],
+        "summary": "Suggested taking a short, easy walk outside and doing one small task to help with low mood and energy."
+    }
+]
